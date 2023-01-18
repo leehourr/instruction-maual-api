@@ -22,16 +22,22 @@ use Symfony\Component\HttpKernel\Fragment\RoutableFragmentRenderer;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-
+//All manuals route
 Route::apiResource('manuals', ManualController::class)->middleware('auth:sanctum');
+
+//Search manual
 Route::apiResource('manuals/{title}', ManualController::class)->middleware('auth:sanctum');
+
+//All complaints
 Route::apiResource('complaints', ComplaintController::class)->middleware('auth:sanctum');
 
+//User's uploaded manuals
 Route::post('/your-manuals', [ManualController::class, 'manualOfUser'])->middleware('auth:sanctum');
 
+//Pending manuals for admin's aprroval
 Route::post('/admin/pending-manuals', [ManualController::class, 'pendingManuals'])->middleware('auth:sanctum');
 
-
+//Auth
 Route::post('/auth/signup', [AuthController::class, 'signup']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
