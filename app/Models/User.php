@@ -21,10 +21,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
     ];
 
-    public function manuals(){
+    public function manuals()
+    {
         return $this->hasMany(manuals::class, 'user_id', 'id');
     }
     /**

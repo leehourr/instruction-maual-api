@@ -29,7 +29,6 @@ class AuthController extends Controller
                     'name' => 'required',
                     'email' => 'required|unique:users,email',
                     'password' => 'required',
-                    'role' => 'required',
                 ]
             );
 
@@ -45,8 +44,7 @@ class AuthController extends Controller
                 'name' => $req->name,
                 'email' => $req->email,
                 'password' => Hash::make($req->password),
-                'role' => $req->role,
-            ], 401);
+            ], 200);
 
             return response()->json([
                 'status' => true,
