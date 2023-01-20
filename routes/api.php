@@ -23,7 +23,7 @@ use Symfony\Component\HttpKernel\Fragment\RoutableFragmentRenderer;
 // })->middleware('auth:sanctum');
 
 //All manuals route
-Route::apiResource('manuals', ManualController::class)->middleware('auth:sanctum');
+Route::apiResource('manuals', ManualController::class);
 
 //Search manual
 Route::apiResource('manuals/{title}', ManualController::class)->middleware('auth:sanctum');

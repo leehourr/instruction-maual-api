@@ -21,7 +21,7 @@ class ManualController extends Controller
      */
     public function index()
     {
-        $manual = Manuals::all()->where('status', 'approved')->makeHidden(['status']);
+        $manual = Manuals::join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'approved')->makeHidden(['status', 'user_id'])->values();
 
         return response()->json([
             'status' => true,
@@ -69,7 +69,7 @@ class ManualController extends Controller
      */
     public function show($title)
     {
-        $manual = Manuals::where('title', $title)->first();
+        $manual = Manuals::all()->where('title', $title)->values();
         if (!$manual) {
             return response()->json([
                 'status' => false,
@@ -89,20 +89,18 @@ class ManualController extends Controller
     //manuals uploaded by each users
     public function manualOfUser(Request $request)
     {
-        $manual = Manuals::all()->where('user_id', $request->user_id);
+        $manual = Manuals::all()->where('user_id', $request->user_id)->values();
         if ($manual->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'message' => 'You have not uploaded any manuals',
                 'manual' => $manual,
-                'uid' => $request->user_id
             ], 404);
         }
 
         return response()->json([
             'status' => true,
             'manual' => $manual,
-            'uid' => $request->user_id
         ], 200);
 
     }
@@ -117,15 +115,13 @@ class ManualController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Users are not authorized for this route',
-                'user_id'=>$user_id,
             ], 401);
         }
 
-        $manuals = Manuals::all()->where('status', 'pending');
+        $manuals = Manuals::join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'pending')->makeHidden('user_id')->values();
         return response()->json([
             'status' => true,
             'pending_manuals' => $manuals,
-            'user_id'=>$user_id
         ], 200);
     }
 
