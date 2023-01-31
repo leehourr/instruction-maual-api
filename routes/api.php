@@ -18,12 +18,12 @@ use Symfony\Component\HttpKernel\Fragment\RoutableFragmentRenderer;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
 
 //All manuals route
-Route::apiResource('manuals', ManualController::class);
+Route::middleware('auth:sanctum')->apiResource('manuals', ManualController::class);
 
 //Search manual
 Route::apiResource('manuals/{title}', ManualController::class)->middleware('auth:sanctum');
@@ -35,9 +35,10 @@ Route::apiResource('complaints', ComplaintController::class)->middleware('auth:s
 Route::post('/your-manuals', [ManualController::class, 'manualOfUser'])->middleware('auth:sanctum');
 
 //Pending manuals for admin's aprroval
-Route::post('/admin/pending-manuals', [ManualController::class, 'pendingManuals'])->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->post('/admin/pending-manuals', [ManualController::class, 'pendingManuals'])->middleware('auth:sanctum');
 
 //Auth
+Route::middleware('auth:sanctum')->post('/auth/all-users', [AuthController::class, 'getAllUsers'])->middleware('auth:sanctum');
 Route::post('/auth/signup', [AuthController::class, 'signup']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

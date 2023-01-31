@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreManualRequest;
 use Illuminate\Support\Manager;
+use PhpParser\Node\Expr\Cast\Object_;
 
 class ManualController extends Controller
 {
@@ -21,7 +22,7 @@ class ManualController extends Controller
      */
     public function index()
     {
-        $manual = Manuals::join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'approved')->makeHidden(['status', 'user_id'])->values();
+        $manual = Manuals::orderBy("updated_at", "desc")->join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'approved')->makeHidden(['status', 'user_id'])->values();
 
         return response()->json([
             'status' => true,
@@ -52,12 +53,20 @@ class ManualController extends Controller
      */
     public function store(StoreManualRequest $request)
     {
-        $manual = Manuals::create($request->all());
+        $user_id = $request->user()->id;
+        $newManual = array("user_id" => $user_id, "img_path" => $request->img_path, "title" => $request->title, "description" => $request->description);
+        // $newManual["user_id"] = $user_id;
+        // $newManual->title = $request->title;
+        // $newManual->img_path = $request->img_path;
+        // $newManual->description = $request->description;
+
+        $manual = Manuals::create($newManual);
 
         return response()->json([
             'status' => true,
             'message' => 'Manual succesfully uploaded',
-            'manual' => $manual
+            // 'manual' => $manual,
+            'uid' => $manual,
         ], 200);
     }
 
@@ -89,18 +98,26 @@ class ManualController extends Controller
     //manuals uploaded by each users
     public function manualOfUser(Request $request)
     {
-        $manual = Manuals::all()->where('user_id', $request->user_id)->values();
-        if ($manual->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'You have not uploaded any manuals',
-                'manual' => $manual,
-            ], 404);
-        }
+        $user_id = $request->user()->id;
+
+        $manual = Manuals::orderBy("created_at", "desc")->join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('user_id', $user_id)->makeHidden(['user_id'])->values();
+        // Manuals::all()->where('user_id', $request->user_id)->values();
+        $user_data = user::where('id', $user_id)->first();
+        // if ($manual->isEmpty()) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'You have not uploaded any manuals',
+        //         'manual' => $manual,
+        //     ], 404);
+        // }
 
         return response()->json([
             'status' => true,
-            'manual' => $manual,
+            'id' => $user_id,
+            'name' => $user_data->name,
+            'email' => $user_data->email,
+            'role' => $user_data->role,
+            'manuals' => $manual,
         ], 200);
 
     }
@@ -108,16 +125,23 @@ class ManualController extends Controller
     //pending manuals
     public function pendingManuals(Request $request)
     {
-        $user_id = $request->user_id;
-
-        $isAdmin = User::FindOrFail($user_id);
-        if ($isAdmin->role != 'admin') {
+        $role = $request->user();
+        if ($role->role != 'admin') {
             return response()->json([
                 'status' => false,
                 'message' => 'Users are not authorized for this route',
             ], 401);
         }
-
+        if ($request->status) {
+            $manual = Manuals::find($request->id);
+            $manual->status = $request->status;
+            $manual->save();
+            // $updatedManual = $manual->update(['status', $request->status]);
+            return response()->json([
+                'status' => 204,
+                'upadated_manual' => $manual,
+            ]);
+        }
         $manuals = Manuals::join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'pending')->makeHidden('user_id')->values();
         return response()->json([
             'status' => true,

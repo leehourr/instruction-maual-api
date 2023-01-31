@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\manuals;
 
 
+
 class AuthController extends Controller
 {
     /**
@@ -27,17 +28,16 @@ class AuthController extends Controller
                 $req->all(),
                 [
                     'name' => 'required',
-                    'email' => 'required|unique:users,email',
-                    'password' => 'required',
+                    'email' => 'required|email|unique:users',
+                    'password' => 'required|min:6',
                 ]
             );
 
             if ($validateUser->fails()) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'valitaion error',
-                    'error' => $validateUser->errors()
-                ], 401);
+                    'status' => 409,
+                    'message' => $validateUser->errors()->getMessages()
+                ]);
             }
 
             $user = User::create([
@@ -47,9 +47,9 @@ class AuthController extends Controller
             ], 200);
 
             return response()->json([
-                'status' => true,
-                'message' => 'User Created',
-                'token' => $user->createToken('API TOKEN')->plainTextToken
+                'status' => 200,
+                'message' => 'Account Created!',
+                // 'token' => $user->createToken('API TOKEN')->plainTextToken
             ], 200);
 
         } catch (\Throwable $err) {
@@ -70,24 +70,28 @@ class AuthController extends Controller
 
             if ($validateUser->fails()) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'validation error',
+                    'status' => 513,
+                    'message' => 'login error',
                     'errors' => $validateUser->errors()
-                ], 401);
+                ]);
             }
 
             if (!Auth::attempt(($req->only(['email', 'password'])))) {
                 return response()->json([
-                    'status' => false,
-                    'message' => 'invalid credentials'
-                ], 401);
+                    'status' => 401,
+                    'message' => 'Incorrect credentials.'
+                ]);
             }
 
             $user = User::where('email', $req->email)->first();
 
             return response()->json([
-                'status' => true,
+                'status' => 200,
                 'message' => 'logged in successfully',
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
                 'token' => $user->createToken('API TOKEN')->plainTextToken
             ], 200);
 
@@ -109,7 +113,14 @@ class AuthController extends Controller
         ], 200);
     }
 
-
+    public function getAllUsers()
+    {
+        $users = User::all()->where('role', 'user');
+        return response()->json([
+            'status' => 200,
+            'users' => $users,
+        ], 200);
+    }
     /**
      */
     public function __construct()
