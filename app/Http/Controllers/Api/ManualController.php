@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreManualRequest;
 use Illuminate\Support\Manager;
 use PhpParser\Node\Expr\Cast\Object_;
+use Illuminate\Database\Eloquent\Builder;
 
 class ManualController extends Controller
 {
@@ -78,18 +79,54 @@ class ManualController extends Controller
      */
     public function show($title)
     {
-        $manual = Manuals::all()->where('title', $title)->values();
+        // $manual = Manuals::all()->where('title', 'LIKE', '%' . $title . '%')->values();
+        Builder::macro('whereLike', function (string $attribute, string $searchTerm) {
+            return $this->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
+        });
+        $manual = Manuals::query()
+            ->whereLike('title', $title)->where("status", "approved")
+            ->get();
+        // $sManual = collect(["title" => $manual->title]);
+
         if (!$manual) {
             return response()->json([
-                'status' => false,
+                'status' => 404,
                 'message' => 'Manual not found',
                 'manual' => $manual,
                 'title' => $title
-            ], 404);
+            ]);
         }
 
         return response()->json([
-            'status' => true,
+            'status' => 200,
+            'manual' => $manual,
+            'title' => $title
+        ], 200);
+    }
+
+
+    public function allManuals($title)
+    {
+        // $manual = Manuals::all()->where('title', 'LIKE', '%' . $title . '%')->values();
+        Builder::macro('whereLike', function (string $attribute, string $searchTerm) {
+            return $this->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
+        });
+        $manual = Manuals::query()
+            ->whereLike('title', $title)
+            ->get();
+        // $sManual = collect(["title" => $manual->title]);
+
+        if (!$manual) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Manual not found',
+                'manual' => $manual,
+                'title' => $title
+            ]);
+        }
+
+        return response()->json([
+            'status' => 200,
             'manual' => $manual,
             'title' => $title
         ], 200);
@@ -99,6 +136,13 @@ class ManualController extends Controller
     public function manualOfUser(Request $request)
     {
         $user_id = $request->user()->id;
+        $role = $request->user();
+        if ($role->role != 'user') {
+            return response()->json([
+                'status' => 401,
+                'message' => 'You are not authorized for this route',
+            ]);
+        }
 
         $manual = Manuals::orderBy("created_at", "desc")->join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('user_id', $user_id)->makeHidden(['user_id'])->values();
         // Manuals::all()->where('user_id', $request->user_id)->values();
@@ -112,7 +156,7 @@ class ManualController extends Controller
         // }
 
         return response()->json([
-            'status' => true,
+            'status' => 200,
             'id' => $user_id,
             'name' => $user_data->name,
             'email' => $user_data->email,
@@ -128,9 +172,9 @@ class ManualController extends Controller
         $role = $request->user();
         if ($role->role != 'admin') {
             return response()->json([
-                'status' => false,
-                'message' => 'Users are not authorized for this route',
-            ], 401);
+                'status' => 401,
+                'message' => 'You are not authorized for this route',
+            ]);
         }
         if ($request->status) {
             $manual = Manuals::find($request->id);
@@ -144,7 +188,7 @@ class ManualController extends Controller
         }
         $manuals = Manuals::join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'pending')->makeHidden('user_id')->values();
         return response()->json([
-            'status' => true,
+            'status' => 200,
             'pending_manuals' => $manuals,
         ], 200);
     }

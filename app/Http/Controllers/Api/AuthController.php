@@ -84,7 +84,12 @@ class AuthController extends Controller
             }
 
             $user = User::where('email', $req->email)->first();
-
+            if ($user->status === "banned") {
+                return response()->json([
+                    'status' => 403,
+                    'message' => "Your account have been banned. Contact the admin if there may be any mistakes regarding the issue."
+                ]);
+            }
             return response()->json([
                 'status' => 200,
                 'message' => 'logged in successfully',
@@ -113,13 +118,62 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function getAllUsers()
+    public function getAllUsers(Request $request)
     {
-        $users = User::all()->where('role', 'user');
+        $role = $request->user();
+        if ($role->role != 'admin') {
+            return response()->json([
+                'status' => 401,
+                'message' => 'You are not authorized for this route',
+            ]);
+        }
+        $users = User::all()->where('role', 'user')->values();
         return response()->json([
             'status' => 200,
             'users' => $users,
         ], 200);
+    }
+
+    public function banUser(Request $request)
+    {
+        $role = $request->user();
+        if ($role->role != 'admin') {
+            return response()->json([
+                'status' => 401,
+                'message' => 'You are not authorized for this route',
+            ], 200);
+        }
+        if ($request->user_id) {
+            $user = User::find($request->user_id);
+            $user->status = "banned";
+            $user->save();
+            // $updatedManual = $manual->update(['status', $request->status]);
+            return response()->json([
+                'status' => 204,
+                'banned_user' => $user,
+            ]);
+        }
+    }
+
+    public function unbanUser(Request $request)
+    {
+        $role = $request->user();
+        if ($role->role != 'admin') {
+            return response()->json([
+                'status' => 401,
+                'message' => 'You are not authorized for this route',
+            ], 200);
+        }
+        if ($request->user_id) {
+            $user = User::find($request->user_id);
+            $user->status = "active";
+            $user->save();
+            // $updatedManual = $manual->update(['status', $request->status]);
+            return response()->json([
+                'status' => 204,
+                'unbanned_user' => $user,
+            ]);
+        }
     }
     /**
      */
