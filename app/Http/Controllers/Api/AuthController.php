@@ -37,7 +37,7 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => 409,
                     'message' => $validateUser->errors()->getMessages()
-                ]);
+                ], 200);
             }
 
             $user = User::create([
@@ -72,15 +72,15 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => 513,
                     'message' => 'login error',
-                    'errors' => $validateUser->errors()
-                ]);
+                    'errors' => $validateUser->errors(),
+                ], 200);
             }
 
             if (!Auth::attempt(($req->only(['email', 'password'])))) {
                 return response()->json([
                     'status' => 401,
                     'message' => 'Incorrect credentials.'
-                ]);
+                ], 200);
             }
 
             $user = User::where('email', $req->email)->first();
@@ -88,7 +88,7 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => 403,
                     'message' => "Your account have been banned. Contact the admin if there may be any mistakes regarding the issue."
-                ]);
+                ], 200);
             }
             return response()->json([
                 'status' => 200,
@@ -103,7 +103,7 @@ class AuthController extends Controller
         } catch (\Throwable $err) {
             return response()->json([
                 'status' => false,
-                'message' => $err->getMessage()
+                'message' => $err->getMessage(),
             ], 500);
         }
     }
@@ -125,7 +125,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 401,
                 'message' => 'You are not authorized for this route',
-            ]);
+            ], 200);
         }
         $users = User::all()->where('role', 'user')->values();
         return response()->json([
@@ -151,7 +151,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 204,
                 'banned_user' => $user,
-            ]);
+            ], 200);
         }
     }
 
@@ -172,7 +172,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 204,
                 'unbanned_user' => $user,
-            ]);
+            ], 200);
         }
     }
     /**

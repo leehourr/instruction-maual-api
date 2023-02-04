@@ -45,22 +45,29 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'instuctions_manuals'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            'host' => env('RDS_HOSTNAME', 'awseb-e-dkdwfhz9ip-stack-awsebrdsdatabase-8mvvxretpdkn.cgkcyjrsq9af.ap-northeast-1.rds.amazonaws.com'),
+            'port' => env('RDS_PORT', '3306'),
+            'database' => env('RDS_DB_NAME', 'ebdb'),
+            'username' => env('RDS_USERNAME', 'leehour'),
+            'password' => env('RDS_PASSWORD', 'leehour99'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
-            'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            // 'driver' => 'mysql',
+            // 'host' => env('RDS_HOSTNAME', '127.0.0.1'),
+            // 'port' => env('RDS_PORT', '3306'),
+            // 'database' => env('RDS_DB_NAME', 'forge'),
+            // 'username' => env('RDS_USERNAME', 'forge'),
+            // 'password' => env('RDS_PASSWORD', ''),
+            // 'unix_socket' => env('DB_SOCKET', ''),
+            // 'charset' => 'utf8mb4',
+            // 'collation' => 'utf8mb4_unicode_ci',
+            // 'prefix' => '',
+            // 'strict' => true,
+            // 'engine' => null,
         ],
 
         'pgsql' => [
@@ -123,7 +130,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_database_'),
         ],
 
         'default' => [

@@ -31,9 +31,34 @@ class ManualController extends Controller
         ], 200);
     }
 
-    public function searchManual(string $title)
+    public function searchManual($title)
     {
+        // if (!$title) {
+        //     return redirect("/api/manuals");
+        // }
+        // $manual = Manuals::all()->where('title', 'LIKE', '%' . $title . '%')->values();
+        Builder::macro('whereLike', function (string $attribute, string $searchTerm) {
+            return $this->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
+        });
+        $manual = Manuals::query()
+            ->whereLike('title', $title)->where("status", "approved")
+            ->get();
+        // $sManual = collect(["title" => $manual->title]);
 
+        if (!$manual) {
+            return response()->json([
+                'status' => 404,
+                'message' => 'Manual not found',
+                'manual' => $manual,
+                'title' => $title
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => 200,
+            'manual' => $manual,
+            'title' => $title
+        ], 200);
     }
 
     /**
@@ -79,29 +104,7 @@ class ManualController extends Controller
      */
     public function show($title)
     {
-        // $manual = Manuals::all()->where('title', 'LIKE', '%' . $title . '%')->values();
-        Builder::macro('whereLike', function (string $attribute, string $searchTerm) {
-            return $this->orWhere($attribute, 'LIKE', "%{$searchTerm}%");
-        });
-        $manual = Manuals::query()
-            ->whereLike('title', $title)->where("status", "approved")
-            ->get();
-        // $sManual = collect(["title" => $manual->title]);
 
-        if (!$manual) {
-            return response()->json([
-                'status' => 404,
-                'message' => 'Manual not found',
-                'manual' => $manual,
-                'title' => $title
-            ]);
-        }
-
-        return response()->json([
-            'status' => 200,
-            'manual' => $manual,
-            'title' => $title
-        ], 200);
     }
 
 
@@ -122,7 +125,7 @@ class ManualController extends Controller
                 'message' => 'Manual not found',
                 'manual' => $manual,
                 'title' => $title
-            ]);
+            ], 200);
         }
 
         return response()->json([
@@ -141,7 +144,7 @@ class ManualController extends Controller
             return response()->json([
                 'status' => 401,
                 'message' => 'You are not authorized for this route',
-            ]);
+            ], 200);
         }
 
         $manual = Manuals::orderBy("created_at", "desc")->join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('user_id', $user_id)->makeHidden(['user_id'])->values();
@@ -174,7 +177,7 @@ class ManualController extends Controller
             return response()->json([
                 'status' => 401,
                 'message' => 'You are not authorized for this route',
-            ]);
+            ], 200);
         }
         if ($request->status) {
             $manual = Manuals::find($request->id);
@@ -184,7 +187,7 @@ class ManualController extends Controller
             return response()->json([
                 'status' => 204,
                 'upadated_manual' => $manual,
-            ]);
+            ], 200);
         }
         $manuals = Manuals::join('users', 'users.id', '=', 'manuals.user_id')->get(['users.name as uploaded_by', 'manuals.*'])->where('status', 'pending')->makeHidden('user_id')->values();
         return response()->json([

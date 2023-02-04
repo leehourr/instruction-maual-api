@@ -23,12 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 //All manuals route
-Route::apiResource('manuals', ManualController::class);
-
+Route::apiResource('/manuals', ManualController::class);
 
 //Search manual
-Route::apiResource('manuals/{title}', ManualController::class)->middleware('auth:sanctum');
-Route::post('all-manuals/{title}', [ManualController::class, 'allManuals']);
+Route::post('/manuals/{title}', [ManualController::class, 'searchManual']);
+Route::post('/all-manuals/{title}', [ManualController::class, 'allManuals']);
 
 //All complaints
 Route::apiResource('complaints', ComplaintController::class)->middleware('auth:sanctum');
