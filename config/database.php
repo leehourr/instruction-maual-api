@@ -56,6 +56,7 @@ return [
             'prefix' => '',
             'strict' => true,
             'engine' => null,
+
             // 'driver' => 'mysql',
             // 'host' => env('RDS_HOSTNAME', '127.0.0.1'),
             // 'port' => env('RDS_PORT', '3306'),
